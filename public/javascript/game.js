@@ -1,3 +1,13 @@
+const html = document.querySelector('html');
+const container = document.querySelector('.container');
+let mouseDown = false;
+html.addEventListener('contextmenu', (e) => e.preventDefault());
+html.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    mouseDown = true;
+});
+html.addEventListener('mouseup', () => mouseDown = false);
+
 class GamePieceFactory {
     constructor() {
         this.parser = new DOMParser();
@@ -38,10 +48,6 @@ class Cell {
 class Game {
     constructor(sizeX, sizeY, minesCount) {
         this.gamePieceFactory = new GamePieceFactory();
-        this.container = document.querySelector('.container');
-        this.container.addEventListener('contextmenu', (e) => e.preventDefault());
-        this.container.addEventListener('mousedown', (e) => e.preventDefault());
-        this.container.addEventListener('mouseleave', () => this.mouseDown = false);
 
         this.sizeX = sizeX;
         this.sizeY = sizeY;
@@ -118,24 +124,24 @@ class Game {
         const cell = this.board[cellX][cellY];
 
         gameCell.addEventListener('mousedown', () => {
-            this.mouseDown = true;
+            mouseDown = true;
             if (cell.isClicked) {
                 this.highlightSurrounding(cell);
             }
         });
         gameCell.addEventListener('mouseup', () => {
-            this.mouseDown = false;
+            mouseDown = false;
             if (cell.isClicked) {
                 this.refresh();
             }
         });
         gameCell.addEventListener('mouseenter', () => {
-            if (this.mouseDown && cell.isClicked) {
+            if (mouseDown && cell.isClicked) {
                 this.highlightSurrounding(cell);
             }
         });
         gameCell.addEventListener('mouseleave', () => {
-            if (this.mouseDown && cell.isClicked) {
+            if (mouseDown && cell.isClicked) {
                 this.refresh();
             }
         });
@@ -259,7 +265,7 @@ class Game {
     refresh() {
         const flagCounter = document.querySelector('#flag-counter');
         flagCounter.textContent = this.countFlags();
-        this.container.innerHTML = '';
+        container.innerHTML = '';
         for (let i = 0; i < this.sizeX; i++) {
             let gameRow = this.gamePieceFactory.getGameRow();
             for (let j = 0; j < this.sizeY; j++) {
@@ -275,7 +281,7 @@ class Game {
                 }
                 gameRow.appendChild(gameCell);
             }
-            this.container.appendChild(gameRow);
+            container.appendChild(gameRow);
         }
     }
 }
