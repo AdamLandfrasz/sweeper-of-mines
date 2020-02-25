@@ -129,8 +129,7 @@ class Game {
             this.refresh();
         });
 
-        gameCell.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
+        gameCell.addEventListener('contextmenu', () => {
             if (cell.isClicked) {
                 return;
             }
@@ -178,6 +177,7 @@ class Game {
         const container = document.querySelector('.container');
         container.innerHTML = '';
         if (this.playerHasWon()) {
+            this.allMines.forEach((mine) => mine.isFlagged = true);
             this.isOver = true;
         }
         for (let i = 0; i < this.sizeX; i++) {
@@ -206,6 +206,7 @@ class Game {
             container.appendChild(gameRow);
         }
         flagCounter.textContent = this.countFlags();
+        container.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 }
 
