@@ -10,6 +10,10 @@ class GamePieceFactory {
     getGameCell() {
         return this.parser.parseFromString(`<div class="cell"><img src="" alt="cell-img" class="cell-img"></div>`, "text/html").querySelector('div');
     }
+
+    getFlagCounter(count) {
+        return this.parser.parseFromString(`<div class="counter">${count}</div>`, "text/html").querySelector('div');
+    }
 }
 
 class Directions {
@@ -93,6 +97,10 @@ class Game {
         }
     }
 
+    countFlags() {
+        return this.minesCount - this.allCells.filter((cell) => cell.isFlagged).length;
+    }
+
     prepGameCell(gameCell) {
         const cellX = gameCell.dataset.x;
         const cellY = gameCell.dataset.y;
@@ -135,6 +143,9 @@ class Game {
                 this.refresh();
                 return;
             }
+            if (this.countFlags() <= 0) {
+                return;
+            }
             cell.isFlagged = true;
             this.refresh();
         });
@@ -167,6 +178,7 @@ class Game {
     }
 
     refresh() {
+        const flagCounter = document.querySelector('#flag-counter');
         const container = document.querySelector('.container');
         container.innerHTML = '';
         if (this.playerHasWon()) {
@@ -197,6 +209,7 @@ class Game {
             }
             container.appendChild(gameRow);
         }
+        flagCounter.textContent = this.countFlags();
     }
 }
 
