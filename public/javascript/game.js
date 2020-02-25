@@ -41,6 +41,7 @@ class Game {
         this.container = document.querySelector('.container');
         this.container.addEventListener('contextmenu', (e) => e.preventDefault());
         this.container.addEventListener('mousedown', (e) => e.preventDefault());
+        this.container.addEventListener('mouseleave', () => this.mouseDown = false);
 
         this.sizeX = sizeX;
         this.sizeY = sizeY;
