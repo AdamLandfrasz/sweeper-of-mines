@@ -266,19 +266,20 @@ class Game {
         const flagCounter = document.querySelector('#flag-counter');
         flagCounter.textContent = this.countFlags();
         container.innerHTML = '';
-        for (let i = 0; i < this.sizeX; i++) {
+        for (let row of this.board) {
             let gameRow = this.gamePieceFactory.getGameRow();
-            for (let j = 0; j < this.sizeY; j++) {
-                let cell = this.board[i][j];
-
+            for (let cell of row) {
                 let gameCell = this.gamePieceFactory.getGameCell();
                 let image = gameCell.firstElementChild;
                 this.setCellImage(cell, image);
+
                 gameCell.dataset.x = cell.x.toString();
                 gameCell.dataset.y = cell.y.toString();
+
                 if (!this.isOver) {
                     this.prepGameCell(gameCell);
                 }
+
                 gameRow.appendChild(gameCell);
             }
             container.appendChild(gameRow);
