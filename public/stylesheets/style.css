@@ -1,0 +1,25 @@
+:root {
+  --cell-size: 40px;
+}
+
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+}
+
+.cell-img {
+  width: var(--cell-size);
+  height: var(--cell-size);
+}
+
+.container {
+  margin: 0 auto;
+  display: flex;
+  width: fit-content;
+  border: 3px solid #828282;
+}
