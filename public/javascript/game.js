@@ -40,6 +40,7 @@ class Game {
         this.gamePieceFactory = new GamePieceFactory();
         this.container = document.querySelector('.container');
         this.container.addEventListener('contextmenu', (e) => e.preventDefault());
+        this.container.addEventListener('mousedown', (e) => e.preventDefault());
 
         this.sizeX = sizeX;
         this.sizeY = sizeY;
@@ -73,6 +74,10 @@ class Game {
 
     countFlags() {
         return this.minesCount - this.allCells.filter((cell) => cell.isFlagged).length;
+    }
+
+    getCellElementByCoordinates(x, y) {
+        return document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
     }
 
     randomizeMines() {
@@ -110,6 +115,29 @@ class Game {
         const cellX = gameCell.dataset.x;
         const cellY = gameCell.dataset.y;
         const cell = this.board[cellX][cellY];
+
+        gameCell.addEventListener('mousedown', () => {
+            this.mouseDown = true;
+            if (cell.isClicked) {
+                this.highlightSurrounding(cell);
+            }
+        });
+        gameCell.addEventListener('mouseup', () => {
+            this.mouseDown = false;
+            if (cell.isClicked) {
+                this.refresh();
+            }
+        });
+        gameCell.addEventListener('mouseenter', () => {
+            if (this.mouseDown && cell.isClicked) {
+                this.highlightSurrounding(cell);
+            }
+        });
+        gameCell.addEventListener('mouseleave', () => {
+            if (this.mouseDown && cell.isClicked) {
+                this.refresh();
+            }
+        });
 
         gameCell.addEventListener('click', () => {
             if (cell.isFlagged || cell.isClicked) {
@@ -175,6 +203,23 @@ class Game {
                 if (nextCell.type === "0") {
                     this.revealNext(nextCell);
                 }
+            }
+        }
+    }
+
+    highlightSurrounding(cell) {
+        for (let direction of Directions.directions) {
+            let nextX = cell.x + direction.x;
+            let nextY = cell.y + direction.y;
+
+            if (!this.isCellOnBoard(nextX, nextY)) {
+                continue;
+            }
+
+            let nextCell = this.board[nextX][nextY];
+            let nextCellImg = this.getCellElementByCoordinates(nextCell.x, nextCell.y).firstElementChild;
+            if (!nextCell.isClicked && !nextCell.isFlagged) {
+                nextCellImg.setAttribute('src', `/images/0.png`);
             }
         }
     }
