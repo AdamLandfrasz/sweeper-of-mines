@@ -1,8 +1,11 @@
 doctype html
+head
+  title= title
+  link(rel="icon" type="image/png" sizes="96x96" href="/images/favicon/favicon-96x96.png")
+  link(rel="icon" type="image/png" sizes="32x32" href="/images/favicon/favicon-32x32.png")
+  link(rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png")
+  link(rel='stylesheet', href='/stylesheets/style.css')
+  script(src='/javascript/game.js' type=module defer)
+  block content
 html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-    script(src='/javascript/game.js' type=module defer)
   body
-    block content
