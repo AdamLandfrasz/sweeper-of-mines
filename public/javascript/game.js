@@ -10,10 +10,6 @@ class GamePieceFactory {
     getGameCell() {
         return this.parser.parseFromString(`<div class="cell"><img src="" alt="cell-img" class="cell-img"></div>`, "text/html").querySelector('div');
     }
-
-    getFlagCounter(count) {
-        return this.parser.parseFromString(`<div class="counter">${count}</div>`, "text/html").querySelector('div');
-    }
 }
 
 class Directions {
