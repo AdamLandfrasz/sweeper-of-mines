@@ -38,6 +38,8 @@ class Cell {
 class Game {
     constructor(sizeX, sizeY, minesCount) {
         this.gamePieceFactory = new GamePieceFactory();
+        this.container = document.querySelector('.container');
+        this.container.addEventListener('contextmenu', (e) => e.preventDefault());
 
         this.sizeX = sizeX;
         this.sizeY = sizeY;
@@ -52,14 +54,25 @@ class Game {
             }
         }
         this.allCells = this.board.flat();
+
         this.randomizeMines();
-        this.calculateValues();
         this.allMines = this.allCells.filter((cell) => cell.type === 'mine');
+        this.calculateValues();
         this.refresh();
+
+        this.prepTimer();
     }
 
     isCellOnBoard(x, y) {
         return x >= 0 && y >= 0 && x < this.sizeX && y < this.sizeY;
+    }
+
+    hasPlayerWon() {
+        return this.allCells.length - this.allCells.filter((cell) => cell.type !== 'mine' && cell.isClicked).length === this.minesCount;
+    }
+
+    countFlags() {
+        return this.minesCount - this.allCells.filter((cell) => cell.isFlagged).length;
     }
 
     randomizeMines() {
@@ -93,39 +106,27 @@ class Game {
         }
     }
 
-    countFlags() {
-        return this.minesCount - this.allCells.filter((cell) => cell.isFlagged).length;
-    }
-
     prepGameCell(gameCell) {
         const cellX = gameCell.dataset.x;
         const cellY = gameCell.dataset.y;
         const cell = this.board[cellX][cellY];
 
         gameCell.addEventListener('click', () => {
-            if (cell.isFlagged) {
+            if (cell.isFlagged || cell.isClicked) {
                 return;
             }
-            if (cell.isClicked) {
-                return;
-            }
+
+            cell.isClicked = true;
             if (cell.type === 'mine') {
-                cell.type = 'mine-red';
-                this.allMines.forEach((mine) => {
-                    mine.isFlagged = false;
-                    mine.isClicked = true;
-                });
-                this.isOver = true;
-                this.refresh();
-                return;
+                this.handleMineClick(cell);
             }
             if (cell.type === '0') {
-                cell.isClicked = true;
                 this.revealNext(cell);
-                this.refresh();
-                return;
             }
-            cell.isClicked = true;
+
+            if (this.hasPlayerWon()) {
+                this.handleWin();
+            }
             this.refresh();
         });
 
@@ -146,8 +147,14 @@ class Game {
         });
     }
 
-    playerHasWon() {
-        return this.allCells.length - this.allCells.filter((cell) => cell.type !== 'mine' && cell.isClicked).length === this.minesCount;
+    handleMineClick(cell) {
+        cell.type = 'mine-red';
+        this.allMines.forEach((mine) => {
+            mine.isFlagged = false;
+            mine.isClicked = true;
+        });
+        this.isOver = true;
+        clearInterval(this.timer);
     }
 
     revealNext(cell) {
@@ -172,30 +179,49 @@ class Game {
         }
     }
 
+    handleWin() {
+        this.allMines.forEach((mine) => mine.isFlagged = true);
+        this.isOver = true;
+        clearInterval(this.timer);
+    }
+
+    startTimer() {
+        const timerElement = document.querySelector('#timer');
+        this.timer = setInterval(() => timerElement.textContent = (parseInt(timerElement.textContent) + 1).toString(), 1000);
+    }
+
+    prepTimer() {
+        const allCellNodes = document.querySelectorAll('.cell');
+        allCellNodes.forEach((cell) => {
+            cell.addEventListener('click', () => this.startTimer());
+            cell.addEventListener('contextmenu', () => this.startTimer());
+        });
+    }
+
+    setCellImage(cell, image) {
+        if (cell.isFlagged) {
+            image.setAttribute('src', `/images/flagged.png`);
+            return;
+        }
+        if (!cell.isClicked) {
+            image.setAttribute('src', `/images/face-down.png`);
+            return;
+        }
+        image.setAttribute('src', `/images/${cell.type}.png`);
+    }
+
     refresh() {
         const flagCounter = document.querySelector('#flag-counter');
-        const container = document.querySelector('.container');
-        container.innerHTML = '';
-        if (this.playerHasWon()) {
-            this.allMines.forEach((mine) => mine.isFlagged = true);
-            this.isOver = true;
-        }
+        flagCounter.textContent = this.countFlags();
+        this.container.innerHTML = '';
         for (let i = 0; i < this.sizeX; i++) {
             let gameRow = this.gamePieceFactory.getGameRow();
             for (let j = 0; j < this.sizeY; j++) {
                 let cell = this.board[i][j];
+
                 let gameCell = this.gamePieceFactory.getGameCell();
-
                 let image = gameCell.firstElementChild;
-                if (cell.isFlagged) {
-                    image.setAttribute('src', `/images/flagged.png`);
-                } else if (!cell.isClicked) {
-                    image.setAttribute('src', `/images/face-down.png`);
-                } else {
-                    image.setAttribute('src', `/images/${cell.type}.png`);
-                }
-
-                // image.setAttribute('src', `/images/${cell.type}.png`);
+                this.setCellImage(cell, image);
                 gameCell.dataset.x = cell.x.toString();
                 gameCell.dataset.y = cell.y.toString();
                 if (!this.isOver) {
@@ -203,10 +229,8 @@ class Game {
                 }
                 gameRow.appendChild(gameCell);
             }
-            container.appendChild(gameRow);
+            this.container.appendChild(gameRow);
         }
-        flagCounter.textContent = this.countFlags();
-        container.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 }
 
