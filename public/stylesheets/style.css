@@ -11,7 +11,6 @@
 
 body {
   padding: 50px;
-  /*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;*/
 }
 
 .cell, .cell-img, #reset {
@@ -33,6 +32,7 @@ body {
   margin: 0 auto;
   padding: 0.5vw;
   width: fit-content;
+  width: -moz-fit-content;
   background-color: #bcbcbc;
   border-top: var(--border-style-bottom);
   border-left: var(--border-style-bottom);

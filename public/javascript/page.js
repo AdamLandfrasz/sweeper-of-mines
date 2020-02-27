@@ -1,7 +1,6 @@
-import { Game } from './game.js';
-export class Page {
-    static mouseDown = false;
+import {Game} from './game.js';
 
+export class Page {
     constructor() {
         this.html = document.querySelector('html');
         this.resetButton = document.querySelector('#reset');
@@ -34,3 +33,5 @@ export class Page {
         });
     }
 }
+
+Page.mouseDown = false;
