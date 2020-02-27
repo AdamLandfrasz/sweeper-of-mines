@@ -77,10 +77,10 @@ class Game {
         this.allCells = this.board.flat();
 
         this.randomizeMines();
-        this.allMines = this.allCells.filter((cell) => cell.type === 'mine');
         this.calculateValues();
-        this.refresh();
-
+        this.allMines = this.allCells.filter((cell) => cell.type === 'mine');
+        this.buildTable();
+        this.allGameCells = this.allCells.map((cell) => cell.gameCell);
         this.prepTimer();
     }
 
@@ -99,10 +99,6 @@ class Game {
     updateFlagCounter() {
         const flagCounter = document.querySelector('#flag-counter');
         flagCounter.textContent = this.countFlags();
-    }
-
-    getCellElementByCoordinates(x, y) {
-        return document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
     }
 
     randomizeMines() {
@@ -136,21 +132,17 @@ class Game {
         }
     }
 
-    prepGameCell(gameCell) {
-        const cellX = gameCell.dataset.x;
-        const cellY = gameCell.dataset.y;
-        const cell = this.board[cellX][cellY];
+    prepGameCell(cell) {
+        const gameCell = cell.gameCell;
 
         gameCell.addEventListener('mousedown', () => {
-            mouseDown = true;
             if (cell.isClicked) {
                 this.highlightSurrounding(cell);
             }
         });
         gameCell.addEventListener('mouseup', () => {
-            mouseDown = false;
             if (cell.isClicked) {
-                this.refresh();
+                this.resetSurrounding(cell);
             }
         });
         gameCell.addEventListener('mouseenter', () => {
@@ -160,7 +152,7 @@ class Game {
         });
         gameCell.addEventListener('mouseleave', () => {
             if (mouseDown && cell.isClicked) {
-                this.refresh();
+                this.resetSurrounding(cell);
             }
         });
 
@@ -168,19 +160,19 @@ class Game {
             if (cell.isFlagged || cell.isClicked) {
                 return;
             }
-
             cell.isClicked = true;
             if (cell.type === 'mine') {
                 this.handleMineClick(cell);
+                return;
             }
             if (cell.type === '0') {
                 this.revealNext(cell);
             }
+            this.setCellImage(cell);
 
             if (this.hasPlayerWon()) {
                 this.handleWin();
             }
-            this.refresh();
         });
 
         gameCell.addEventListener('contextmenu', () => {
@@ -189,14 +181,16 @@ class Game {
             }
             if (cell.isFlagged) {
                 cell.isFlagged = false;
-                this.refresh();
+                this.setCellImage(cell);
+                this.updateFlagCounter();
                 return;
             }
             if (this.countFlags() <= 0) {
                 return;
             }
             cell.isFlagged = true;
-            this.refresh();
+            this.setCellImage(cell);
+            this.updateFlagCounter();
         });
     }
 
@@ -205,9 +199,11 @@ class Game {
         this.allMines.forEach((mine) => {
             mine.isFlagged = false;
             mine.isClicked = true;
+            this.setCellImage(mine);
         });
         this.isOver = true;
         clearInterval(this.timer);
+        this.buildTable();
     }
 
     revealNext(cell) {
@@ -225,6 +221,7 @@ class Game {
             if (nextCell.isClicked === false) {
                 nextCell.isClicked = true;
                 nextCell.isFlagged = false;
+                this.setCellImage(nextCell);
                 if (nextCell.type === "0") {
                     this.revealNext(nextCell);
                 }
@@ -242,9 +239,25 @@ class Game {
             }
 
             let nextCell = this.board[nextX][nextY];
-            let nextCellImg = this.getCellElementByCoordinates(nextCell.x, nextCell.y).firstElementChild;
+            let nextCellImg = nextCell.gameCell.firstElementChild;
             if (!nextCell.isClicked && !nextCell.isFlagged) {
                 nextCellImg.setAttribute('src', `/images/0.png`);
+            }
+        }
+    }
+
+    resetSurrounding(cell) {
+        for (let direction of Directions.directions) {
+            let nextX = cell.x + direction.x;
+            let nextY = cell.y + direction.y;
+
+            if (!this.isCellOnBoard(nextX, nextY)) {
+                continue;
+            }
+
+            let nextCell = this.board[nextX][nextY];
+            if (!nextCell.isClicked && !nextCell.isFlagged) {
+                this.setCellImage(nextCell);
             }
         }
     }
@@ -253,6 +266,7 @@ class Game {
         this.allMines.forEach((mine) => mine.isFlagged = true);
         this.isOver = true;
         clearInterval(this.timer);
+        this.buildTable();
     }
 
     startTimer() {
@@ -262,17 +276,18 @@ class Game {
             }
             timerElement.textContent = (parseInt(timerElement.textContent) + 1).toString();
         }, 1000);
+        this.buildTable();
     }
 
     prepTimer() {
-        const allCellNodes = document.querySelectorAll('.cell');
-        allCellNodes.forEach((cell) => {
+        this.allGameCells.forEach((cell) => {
             cell.addEventListener('click', () => this.startTimer());
             cell.addEventListener('contextmenu', () => this.startTimer());
         });
     }
 
-    setCellImage(cell, image) {
+    setCellImage(cell) {
+        const image = cell.gameCell.firstElementChild;
         if (cell.isFlagged) {
             image.setAttribute('src', `/images/flagged.png`);
             return;
@@ -284,24 +299,19 @@ class Game {
         image.setAttribute('src', `/images/${cell.type}.png`);
     }
 
-    refresh() {
-        this.updateFlagCounter();
+    buildTable() {
+        // this.updateFlagCounter();
+        console.log("rebuilding table" + timerElement.textContent);
         gameField.innerHTML = '';
         for (let row of this.board) {
             let gameRow = this.gamePieceFactory.getGameRow();
             for (let cell of row) {
-                let gameCell = this.gamePieceFactory.getGameCell();
-                let image = gameCell.firstElementChild;
-                this.setCellImage(cell, image);
-
-                gameCell.dataset.x = cell.x.toString();
-                gameCell.dataset.y = cell.y.toString();
-
+                cell.gameCell = this.gamePieceFactory.getGameCell();
+                this.setCellImage(cell);
                 if (!this.isOver) {
-                    this.prepGameCell(gameCell);
+                    this.prepGameCell(cell);
                 }
-
-                gameRow.appendChild(gameCell);
+                gameRow.appendChild(cell.gameCell);
             }
             gameField.appendChild(gameRow);
         }
