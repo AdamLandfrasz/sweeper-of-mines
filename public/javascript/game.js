@@ -1,67 +1,10 @@
-const html = document.querySelector('html');
-const gameField = document.querySelector('#game-field');
-const resetButton = document.querySelector('#reset');
-const timerElement = document.querySelector('#timer');
-let mouseDown = false;
-html.addEventListener('contextmenu', (e) => e.preventDefault());
-html.addEventListener('mousedown', (e) => e.preventDefault());
-html.addEventListener('mousedown', () => mouseDown = true);
-html.addEventListener('mouseup', () => mouseDown = false);
-resetButton.addEventListener('mousedown', () => resetButton.setAttribute('src', '/images/faces/face_pressed.svg'));
-resetButton.addEventListener('mouseup', () => resetButton.setAttribute('src', '/images/faces/face_unpressed.svg'));
-resetButton.addEventListener('mouseleave', () => resetButton.setAttribute('src', '/images/faces/face_unpressed.svg'));
-resetButton.addEventListener('mouseenter', () => {
-    if (mouseDown) {
-        resetButton.setAttribute('src', '/images/faces/face_pressed.svg');
-    }
-});
-resetButton.addEventListener('click', () => {
-    clearInterval(game.timer);
-    timerElement.textContent = '0';
-    game = new Game(9, 9, 10);
-});
+import { directions } from "./directions.js";
+import { GamePieceFactory } from "./gamePieceFactory.js";
+import { Page } from "./page.js";
+import { Cell } from "./cell.js";
 
-class GamePieceFactory {
-    constructor() {
-        this.parser = new DOMParser();
-    }
-
-    getGameRow() {
-        return this.parser.parseFromString(`<div class="game-row"></div>`, "text/html").querySelector('div');
-    }
-
-    getGameCell() {
-        return this.parser.parseFromString(`<div class="cell"><img src="" alt="cell-img" class="cell-img"></div>`, "text/html").querySelector('div');
-    }
-}
-
-class Directions {
-    static directions = [
-        {x: 0, y: -1}, // north
-        {x: 1, y: -1}, // northeast
-        {x: 1, y: 0},  // east
-        {x: 1, y: 1},  // southeast
-        {x: 0, y: 1},  // south
-        {x: -1, y: 1}, // southwest
-        {x: -1, y: 0}, // west
-        {x: -1, y: -1} // northwest
-    ];
-}
-
-class Cell {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.type = "0";
-        this.isClicked = false;
-        this.isFlagged = false;
-    }
-}
-
-class Game {
+export class Game {
     constructor(sizeX, sizeY, minesCount) {
-        this.gamePieceFactory = new GamePieceFactory();
-
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.minesCount = minesCount;
@@ -118,7 +61,7 @@ class Game {
                 continue;
             }
             let mineCount = 0;
-            for (let direction of Directions.directions) {
+            for (let direction of directions) {
                 let nextX = cell.x + direction.x;
                 let nextY = cell.y + direction.y;
                 if (!this.isCellOnBoard(nextX, nextY)) {
@@ -146,12 +89,12 @@ class Game {
             }
         });
         gameCell.addEventListener('mouseenter', () => {
-            if (mouseDown && cell.isClicked) {
+            if (Page.mouseDown && cell.isClicked) {
                 this.highlightSurrounding(cell);
             }
         });
         gameCell.addEventListener('mouseleave', () => {
-            if (mouseDown && cell.isClicked) {
+            if (Page.mouseDown && cell.isClicked) {
                 this.resetSurrounding(cell);
             }
         });
@@ -168,7 +111,7 @@ class Game {
             if (cell.type === '0') {
                 this.revealNext(cell);
             }
-            this.setCellImage(cell);
+            cell.setImage();
 
             if (this.hasPlayerWon()) {
                 this.handleWin();
@@ -181,7 +124,7 @@ class Game {
             }
             if (cell.isFlagged) {
                 cell.isFlagged = false;
-                this.setCellImage(cell);
+                cell.setImage();
                 this.updateFlagCounter();
                 return;
             }
@@ -189,17 +132,16 @@ class Game {
                 return;
             }
             cell.isFlagged = true;
-            this.setCellImage(cell);
+            cell.setImage();
             this.updateFlagCounter();
         });
     }
 
     handleMineClick(cell) {
         cell.type = 'mine-red';
+        this.allCells.forEach((cell) => cell.isFlagged = false);
         this.allMines.forEach((mine) => {
-            mine.isFlagged = false;
             mine.isClicked = true;
-            this.setCellImage(mine);
         });
         this.isOver = true;
         clearInterval(this.timer);
@@ -207,7 +149,7 @@ class Game {
     }
 
     revealNext(cell) {
-        for (let direction of Directions.directions) {
+        for (let direction of directions) {
             let nextX = cell.x + direction.x;
             let nextY = cell.y + direction.y;
 
@@ -221,7 +163,7 @@ class Game {
             if (nextCell.isClicked === false) {
                 nextCell.isClicked = true;
                 nextCell.isFlagged = false;
-                this.setCellImage(nextCell);
+                nextCell.setImage();
                 if (nextCell.type === "0") {
                     this.revealNext(nextCell);
                 }
@@ -230,7 +172,7 @@ class Game {
     }
 
     highlightSurrounding(cell) {
-        for (let direction of Directions.directions) {
+        for (let direction of directions) {
             let nextX = cell.x + direction.x;
             let nextY = cell.y + direction.y;
 
@@ -239,15 +181,14 @@ class Game {
             }
 
             let nextCell = this.board[nextX][nextY];
-            let nextCellImg = nextCell.gameCell.firstElementChild;
             if (!nextCell.isClicked && !nextCell.isFlagged) {
-                nextCellImg.setAttribute('src', `/images/0.png`);
+                nextCell.highlightImage();
             }
         }
     }
 
     resetSurrounding(cell) {
-        for (let direction of Directions.directions) {
+        for (let direction of directions) {
             let nextX = cell.x + direction.x;
             let nextY = cell.y + direction.y;
 
@@ -257,7 +198,7 @@ class Game {
 
             let nextCell = this.board[nextX][nextY];
             if (!nextCell.isClicked && !nextCell.isFlagged) {
-                this.setCellImage(nextCell);
+                nextCell.setImage();
             }
         }
     }
@@ -270,8 +211,9 @@ class Game {
     }
 
     startTimer() {
+        const timerElement = document.querySelector('#timer');
         this.timer = setInterval(() => {
-            if (timerElement.textContent === '999') {
+            if (timerElement.textContent === '999' || this.isOver) {
                 return;
             }
             timerElement.textContent = (parseInt(timerElement.textContent) + 1).toString();
@@ -286,28 +228,14 @@ class Game {
         });
     }
 
-    setCellImage(cell) {
-        const image = cell.gameCell.firstElementChild;
-        if (cell.isFlagged) {
-            image.setAttribute('src', `/images/flagged.png`);
-            return;
-        }
-        if (!cell.isClicked) {
-            image.setAttribute('src', `/images/face-down.png`);
-            return;
-        }
-        image.setAttribute('src', `/images/${cell.type}.png`);
-    }
-
     buildTable() {
-        // this.updateFlagCounter();
-        console.log("rebuilding table" + timerElement.textContent);
+        const gameField = document.querySelector('#game-field');
         gameField.innerHTML = '';
         for (let row of this.board) {
-            let gameRow = this.gamePieceFactory.getGameRow();
+            let gameRow = GamePieceFactory.getGameRow();
             for (let cell of row) {
-                cell.gameCell = this.gamePieceFactory.getGameCell();
-                this.setCellImage(cell);
+                cell.gameCell = GamePieceFactory.getGameCell();
+                cell.setImage();
                 if (!this.isOver) {
                     this.prepGameCell(cell);
                 }
@@ -315,7 +243,6 @@ class Game {
             }
             gameField.appendChild(gameRow);
         }
+        this.updateFlagCounter();
     }
 }
-
-let game = new Game(9, 9, 10);
