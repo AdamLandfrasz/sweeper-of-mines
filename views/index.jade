@@ -1,6 +1,9 @@
 extends layout
 
 block content
-  div(id='flag-counter')
-  div(class='container')
-  div(id='timer')=0
+  div(id='wrapper')
+    div(id='header')
+      div(id='flag-counter' class='digital')
+      img(id='reset' src='/images/faces/face_unpressed.svg' alt='reset-game')
+      div(id='timer' class='digital')='0'
+    div(id='game-field')

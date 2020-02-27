@@ -1,25 +1,71 @@
 :root {
   --cell-size: 40px;
+  --border-style-top: 5px solid #828282;
+  --border-style-bottom: 5px solid #FFFFFF;
+}
+
+@font-face {
+  font-family: 'digital-7';
+  src: url('../fonts/digital-7.ttf');
 }
 
 body {
   padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  /*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;*/
 }
 
-.cell {
+.cell, .cell-img, #reset {
   width: var(--cell-size);
   height: var(--cell-size);
 }
 
-.cell-img {
-  width: var(--cell-size);
-  height: var(--cell-size);
+.digital {
+  width: 30%;
+  height: 50px;
+  line-height: 40px;
+  font-family: 'digital-7', sans-serif;
+  font-size: 50px;
+  text-shadow: 2px 2px 3px black;
+  color: red;
 }
 
-.container {
+#wrapper {
   margin: 0 auto;
+  padding: 0.5vw;
+  width: fit-content;
+  background-color: #bcbcbc;
+  border-top: var(--border-style-bottom);
+  border-left: var(--border-style-bottom);
+  border-bottom: var(--border-style-top);
+  border-right: var(--border-style-top);
+}
+
+#header, #game-field {
+  border-top: var(--border-style-top);
+  border-left: var(--border-style-top);
+  border-bottom: var(--border-style-bottom);
+  border-right: var(--border-style-bottom);
+}
+
+#header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3vw 1vw;
+  margin-bottom: 0.5vw;
+  background-color: #bcbcbc;
+}
+
+#game-field {
   display: flex;
   width: fit-content;
-  border: 3px solid #828282;
+}
+
+#timer {
+  text-align: right;
+}
+
+#reset {
+  height: 50px;
+  width: 50px;
 }

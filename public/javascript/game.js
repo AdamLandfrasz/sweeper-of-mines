@@ -1,12 +1,25 @@
 const html = document.querySelector('html');
-const container = document.querySelector('.container');
+const gameField = document.querySelector('#game-field');
+const resetButton = document.querySelector('#reset');
+const timerElement = document.querySelector('#timer');
 let mouseDown = false;
 html.addEventListener('contextmenu', (e) => e.preventDefault());
-html.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    mouseDown = true;
-});
+html.addEventListener('mousedown', (e) => e.preventDefault());
+html.addEventListener('mousedown', () => mouseDown = true);
 html.addEventListener('mouseup', () => mouseDown = false);
+resetButton.addEventListener('mousedown', () => resetButton.setAttribute('src', '/images/faces/face_pressed.svg'));
+resetButton.addEventListener('mouseup', () => resetButton.setAttribute('src', '/images/faces/face_unpressed.svg'));
+resetButton.addEventListener('mouseleave', () => resetButton.setAttribute('src', '/images/faces/face_unpressed.svg'));
+resetButton.addEventListener('mouseenter', () => {
+    if (mouseDown) {
+        resetButton.setAttribute('src', '/images/faces/face_pressed.svg');
+    }
+});
+resetButton.addEventListener('click', () => {
+    clearInterval(game.timer);
+    timerElement.textContent = '0';
+    game = new Game(9, 9, 10);
+});
 
 class GamePieceFactory {
     constructor() {
@@ -14,7 +27,7 @@ class GamePieceFactory {
     }
 
     getGameRow() {
-        return this.parser.parseFromString(`<div class="row"></div>`, "text/html").querySelector('div');
+        return this.parser.parseFromString(`<div class="game-row"></div>`, "text/html").querySelector('div');
     }
 
     getGameCell() {
@@ -81,6 +94,11 @@ class Game {
 
     countFlags() {
         return this.minesCount - this.allCells.filter((cell) => cell.isFlagged).length;
+    }
+
+    updateFlagCounter() {
+        const flagCounter = document.querySelector('#flag-counter');
+        flagCounter.textContent = this.countFlags();
     }
 
     getCellElementByCoordinates(x, y) {
@@ -238,8 +256,12 @@ class Game {
     }
 
     startTimer() {
-        const timerElement = document.querySelector('#timer');
-        this.timer = setInterval(() => timerElement.textContent = (parseInt(timerElement.textContent) + 1).toString(), 1000);
+        this.timer = setInterval(() => {
+            if (timerElement.textContent === '999') {
+                return;
+            }
+            timerElement.textContent = (parseInt(timerElement.textContent) + 1).toString();
+        }, 1000);
     }
 
     prepTimer() {
@@ -263,9 +285,8 @@ class Game {
     }
 
     refresh() {
-        const flagCounter = document.querySelector('#flag-counter');
-        flagCounter.textContent = this.countFlags();
-        container.innerHTML = '';
+        this.updateFlagCounter();
+        gameField.innerHTML = '';
         for (let row of this.board) {
             let gameRow = this.gamePieceFactory.getGameRow();
             for (let cell of row) {
@@ -282,9 +303,9 @@ class Game {
 
                 gameRow.appendChild(gameCell);
             }
-            container.appendChild(gameRow);
+            gameField.appendChild(gameRow);
         }
     }
 }
 
-new Game(9, 9, 10);
+let game = new Game(9, 9, 10);
