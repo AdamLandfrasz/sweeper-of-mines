@@ -3,7 +3,6 @@ import {Game} from './game.js';
 export class Page {
     constructor() {
         this.html = document.querySelector('html');
-        this.resetButton = document.querySelector('#reset');
         this.timerElement = document.querySelector('#timer');
         this.game = new Game(9, 9, 10);
         this.prepPage();
@@ -18,20 +17,23 @@ export class Page {
     }
 
     prepReset() {
-        this.resetButton.addEventListener('mousedown', () => this.resetButton.setAttribute('src', '/images/faces/face_pressed.svg'));
-        this.resetButton.addEventListener('mouseup', () => this.resetButton.setAttribute('src', '/images/faces/face_unpressed.svg'));
-        this.resetButton.addEventListener('mouseleave', () => this.resetButton.setAttribute('src', '/images/faces/face_unpressed.svg'));
-        this.resetButton.addEventListener('mouseenter', () => {
-            if (Page.mouseDown) {
-                this.resetButton.setAttribute('src', '/images/faces/face_pressed.svg');
-            }
-        });
-        this.resetButton.addEventListener('click', () => {
+        Page.resetButton.addEventListener('mousedown', () => Page.resetButton.setAttribute('src', '/images/faces/face_pressed.svg'));
+        Page.resetButton.addEventListener('mouseup', () => Page.resetButton.setAttribute('src', Page.currentFace));
+        Page.resetButton.addEventListener('mouseleave', () => Page.resetButton.setAttribute('src', Page.currentFace));
+        // Page.resetButton.addEventListener('mouseenter', () => {
+        //     if (Page.mouseDown) {
+        //         Page.resetButton.setAttribute('src', '/images/faces/face_pressed.svg');
+        //     }
+        // });
+        Page.resetButton.addEventListener('click', () => {
             clearInterval(this.game.timer);
             this.timerElement.textContent = '0';
             this.game = new Game(9, 9, 10);
+            Page.currentFace = '/images/faces/face_unpressed.svg';
+            Page.resetButton.setAttribute('src', Page.currentFace);
         });
     }
 }
-
+Page.currentFace = '/images/faces/face_unpressed.svg';
+Page.resetButton = document.querySelector('#reset');
 Page.mouseDown = false;
