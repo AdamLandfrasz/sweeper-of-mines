@@ -156,8 +156,8 @@ export class Game {
         this.isOver = true;
         clearInterval(this.timer);
         this.buildTable();
-        Page.resetButton.setAttribute('src', '/images/faces/face_lose.svg');
         Page.currentFace = '/images/faces/face_lose.svg';
+        Page.resetButton.setAttribute('src', Page.currentFace);
 
     }
 
@@ -243,8 +243,8 @@ export class Game {
         this.isOver = true;
         clearInterval(this.timer);
         this.buildTable();
-        Page.resetButton.setAttribute('src', '/images/faces/face_win.svg');
         Page.currentFace = '/images/faces/face_win.svg';
+        Page.resetButton.setAttribute('src', Page.currentFace);
     }
 
     startTimer() {
