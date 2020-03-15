@@ -9,6 +9,7 @@ export class Game {
         this.sizeY = sizeY;
         this.minesCount = minesCount;
         this.isOver = false;
+        this.hasStarted  = false;
 
         this.board = [];
         for (let i = 0; i < sizeX; i++) {
@@ -19,12 +20,15 @@ export class Game {
         }
         this.allCells = this.board.flat();
 
-        this.randomizeMines();
-        this.calculateValues();
-        this.allMines = this.allCells.filter((cell) => cell.type === 'mine');
         this.buildTable();
         this.allGameCells = this.allCells.map((cell) => cell.gameCell);
         this.prepTimer();
+    }
+
+    initGame() {
+        this.randomizeMines();
+        this.calculateValues();
+        this.allMines = this.allCells.filter((cell) => cell.type === 'mine');
     }
 
     isCellOnBoard(x, y) {
@@ -48,7 +52,7 @@ export class Game {
         let mines = this.minesCount;
         while (mines > 0) {
             let randomIndex = Math.floor(Math.random() * this.allCells.length);
-            if (this.allCells[randomIndex].type !== 'mine') {
+            if (this.allCells[randomIndex].type !== 'mine' && !this.allCells[randomIndex].isStarter) {
                 this.allCells[randomIndex].type = 'mine';
                 mines--;
             }
@@ -100,6 +104,11 @@ export class Game {
         });
 
         gameCell.addEventListener('click', () => {
+            if (!this.hasStarted){
+                this.hasStarted = true;
+                cell.isStarter = true;
+                this.initGame();
+            }
             if (cell.isFlagged || cell.isClicked) {
                 return;
             }

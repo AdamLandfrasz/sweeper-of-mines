@@ -7,6 +7,7 @@ export class Cell {
         this.type = "0";
         this.isClicked = false;
         this.isFlagged = false;
+        this.isStarter = false;
     }
 
     setImage() {
