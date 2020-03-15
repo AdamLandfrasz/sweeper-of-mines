@@ -4,6 +4,7 @@ import {difficulties} from "./difficulty.js";
 export class Page {
     constructor() {
         this.html = document.querySelector('html');
+        this.buttons = document.querySelectorAll('button');
         this.timerElement = document.querySelector('#timer');
         this.difficulty = difficulties.beginner;
         this.startNewGame();
@@ -37,18 +38,24 @@ export class Page {
         document.querySelector('#beginner')
             .addEventListener('click', () => {
                 this.difficulty = difficulties.beginner;
+                clearInterval(this.game.timer);
+                this.timerElement.textContent = '0';
                 this.startNewGame();
             });
 
         document.querySelector('#intermediate')
             .addEventListener('click', () => {
                 this.difficulty = difficulties.intermediate;
+                clearInterval(this.game.timer);
+                this.timerElement.textContent = '0';
                 this.startNewGame();
         });
 
         document.querySelector('#expert')
             .addEventListener('click', () => {
                 this.difficulty = difficulties.expert;
+                clearInterval(this.game.timer);
+                this.timerElement.textContent = '0';
                 this.startNewGame();
             });
     }
