@@ -1,7 +1,7 @@
-import { directions } from "./directions.js";
-import { GamePieceFactory } from "./gamePieceFactory.js";
-import { Page } from "./page.js";
-import { Cell } from "./cell.js";
+import {directions} from "./directions.js";
+import {GamePieceFactory} from "./gamePieceFactory.js";
+import {Page} from "./page.js";
+import {Cell} from "./cell.js";
 
 export class Game {
     constructor(sizeX, sizeY, minesCount) {
@@ -9,7 +9,8 @@ export class Game {
         this.sizeY = sizeY;
         this.minesCount = minesCount;
         this.isOver = false;
-        this.hasStarted  = false;
+        this.hasStarted = false;
+        this.starterCellCount = 15;
 
         this.board = [];
         for (let i = 0; i < sizeX; i++) {
@@ -104,9 +105,9 @@ export class Game {
         });
 
         gameCell.addEventListener('click', () => {
-            if (!this.hasStarted){
+            if (!this.hasStarted) {
                 this.hasStarted = true;
-                cell.isStarter = true;
+                this.markStarterCell(cell);
                 this.initGame();
             }
             if (cell.isFlagged || cell.isClicked) {
@@ -157,6 +158,28 @@ export class Game {
         this.buildTable();
     }
 
+    markStarterCell(cell) {
+        cell.isStarter = true;
+        this.starterCellCount--;
+        let nextCell;
+        for (let direction of directions) {
+            let nextX = cell.x + direction.x;
+            let nextY = cell.y + direction.y;
+            if (!this.isCellOnBoard(nextX, nextY)) {
+                continue;
+            }
+            nextCell = this.board[nextX][nextY];
+            if (nextCell.isStarter) {
+                continue;
+            }
+            nextCell.isStarter = true;
+            this.starterCellCount--;
+        }
+        if (this.starterCellCount > 0) {
+            this.markStarterCell(nextCell);
+        }
+    }
+
     revealNext(cell) {
         for (let direction of directions) {
             let nextX = cell.x + direction.x;
@@ -169,7 +192,7 @@ export class Game {
             if (nextCell.type === 'mine') {
                 continue;
             }
-            if (nextCell.isClicked === false) {
+            if (!nextCell.isClicked) {
                 nextCell.isClicked = true;
                 nextCell.isFlagged = false;
                 nextCell.setImage();
