@@ -4,7 +4,7 @@ export class Page {
     constructor() {
         this.html = document.querySelector('html');
         this.timerElement = document.querySelector('#timer');
-        this.game = new Game(9, 9, );
+        this.game = new Game(30, 16, 99);
         this.prepPage();
         this.prepReset();
     }
@@ -24,7 +24,7 @@ export class Page {
         Page.resetButton.addEventListener('click', () => {
             clearInterval(this.game.timer);
             this.timerElement.textContent = '0';
-            this.game = new Game(9, 9, 10);
+            this.game = new Game(30, 16, 99);
             Page.currentFace = '/images/faces/face_unpressed.svg';
             Page.resetButton.setAttribute('src', Page.currentFace);
         });
