@@ -1,10 +1,10 @@
 import {directions} from "./directions.js";
 import {GamePieceFactory} from "./gamePieceFactory.js";
-import {Page} from "./page.js";
 import {Cell} from "./cell.js";
 
 export class Game {
-    constructor(sizeX, sizeY, minesCount) {
+    constructor(sizeX, sizeY, minesCount, page) {
+        this.page = page;
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.minesCount = minesCount;
@@ -89,17 +89,20 @@ export class Game {
             }
         });
         gameCell.addEventListener('mouseup', () => {
-            if (cell.isClicked) {
+            if (!cell.isClicked) return;
+            if (this.countSurroundingFlags(cell) >= parseInt(cell.type)) {
+                this.revealSurrounding(cell);
+            } else {
                 this.resetSurrounding(cell);
             }
         });
         gameCell.addEventListener('mouseenter', () => {
-            if (Page.mouseDown && cell.isClicked) {
+            if (this.page.mouseDown && cell.isClicked) {
                 this.highlightSurrounding(cell);
             }
         });
         gameCell.addEventListener('mouseleave', () => {
-            if (Page.mouseDown && cell.isClicked) {
+            if (this.page.mouseDown && cell.isClicked) {
                 this.resetSurrounding(cell);
             }
         });
@@ -110,22 +113,7 @@ export class Game {
                 this.markStarterCell(cell);
                 this.initGame();
             }
-            if (cell.isFlagged || cell.isClicked) {
-                return;
-            }
-            cell.isClicked = true;
-            if (cell.type === 'mine') {
-                this.handleMineClick(cell);
-                return;
-            }
-            if (cell.type === '0') {
-                this.revealNext(cell);
-            }
-            cell.setImage();
-
-            if (this.hasPlayerWon()) {
-                this.handleWin();
-            }
+            this.revealCell(cell);
         });
 
         gameCell.addEventListener('contextmenu', () => {
@@ -147,6 +135,24 @@ export class Game {
         });
     }
 
+    revealCell(cell) {
+        if (cell.isFlagged || cell.isClicked) {
+            return;
+        }
+        cell.isClicked = true;
+        if (cell.type === 'mine') {
+            this.handleMineClick(cell);
+            return;
+        }
+        if (cell.type === '0') {
+            this.revealNext(cell);
+        }
+        cell.setImage();
+        if (this.hasPlayerWon()) {
+            this.handleWin();
+        }
+    }
+
     handleMineClick(cell) {
         cell.type = 'mine-red';
         this.allCells.forEach((cell) => cell.isFlagged = false);
@@ -156,9 +162,7 @@ export class Game {
         this.isOver = true;
         clearInterval(this.timer);
         this.buildTable();
-        Page.currentFace = '/images/faces/face_lose.svg';
-        Page.resetButton.setAttribute('src', Page.currentFace);
-
+        this.page.setFace('lose');
     }
 
     markStarterCell(cell) {
@@ -168,13 +172,9 @@ export class Game {
         for (let direction of directions) {
             let nextX = cell.x + direction.x;
             let nextY = cell.y + direction.y;
-            if (!this.isCellOnBoard(nextX, nextY)) {
-                continue;
-            }
+            if (!this.isCellOnBoard(nextX, nextY)) continue;
             nextCell = this.board[nextX][nextY];
-            if (nextCell.isStarter) {
-                continue;
-            }
+            if (nextCell.isStarter) continue;
             nextCell.isStarter = true;
             this.starterCellCount--;
         }
@@ -187,14 +187,9 @@ export class Game {
         for (let direction of directions) {
             let nextX = cell.x + direction.x;
             let nextY = cell.y + direction.y;
-
-            if (!this.isCellOnBoard(nextX, nextY)) {
-                continue;
-            }
-            let nextCell = this.board[nextX][nextY];
-            if (nextCell.type === 'mine') {
-                continue;
-            }
+            if (!this.isCellOnBoard(nextX, nextY))continue;
+            const nextCell = this.board[nextX][nextY];
+            if (nextCell.type === 'mine') continue;
             if (!nextCell.isClicked) {
                 nextCell.isClicked = true;
                 nextCell.isFlagged = false;
@@ -210,15 +205,33 @@ export class Game {
         for (let direction of directions) {
             let nextX = cell.x + direction.x;
             let nextY = cell.y + direction.y;
-
-            if (!this.isCellOnBoard(nextX, nextY)) {
-                continue;
-            }
-
-            let nextCell = this.board[nextX][nextY];
+            if (!this.isCellOnBoard(nextX, nextY)) continue;
+            const nextCell = this.board[nextX][nextY];
             if (!nextCell.isClicked && !nextCell.isFlagged) {
                 nextCell.highlightImage();
             }
+        }
+    }
+
+    revealSurrounding(cell) {
+        for (let direction of directions) {
+            let nextX = cell.x + direction.x;
+            let nextY = cell.y + direction.y;
+            if (!this.isCellOnBoard(nextX, nextY)) continue;
+            const nextCell = this.board[nextX][nextY];
+            if (nextCell.isFlagged) continue;
+            if (nextCell.type === 'mine') {
+                this.revealCell(nextCell);
+                return;
+            }
+        }
+        for (let direction of directions) {
+            let nextX = cell.x + direction.x;
+            let nextY = cell.y + direction.y;
+            if (!this.isCellOnBoard(nextX, nextY)) continue;
+            const nextCell = this.board[nextX][nextY];
+            if (nextCell.isFlagged) continue;
+            this.revealCell(nextCell);
         }
     }
 
@@ -226,16 +239,22 @@ export class Game {
         for (let direction of directions) {
             let nextX = cell.x + direction.x;
             let nextY = cell.y + direction.y;
-
-            if (!this.isCellOnBoard(nextX, nextY)) {
-                continue;
-            }
-
-            let nextCell = this.board[nextX][nextY];
-            if (!nextCell.isClicked && !nextCell.isFlagged) {
-                nextCell.setImage();
-            }
+            if (!this.isCellOnBoard(nextX, nextY)) continue;
+            const nextCell = this.board[nextX][nextY];
+            if (nextCell.isFlagged) continue;
+            nextCell.setImage();
         }
+    }
+
+    countSurroundingFlags(cell) {
+        let flagCount = 0;
+        for (let direction of directions) {
+            let nextX = cell.x + direction.x;
+            let nextY = cell.y + direction.y;
+            if (!this.isCellOnBoard(nextX, nextY)) continue;
+            if (this.board[nextX][nextY].isFlagged) flagCount++;
+        }
+        return flagCount;
     }
 
     handleWin() {
@@ -243,8 +262,7 @@ export class Game {
         this.isOver = true;
         clearInterval(this.timer);
         this.buildTable();
-        Page.currentFace = '/images/faces/face_win.svg';
-        Page.resetButton.setAttribute('src', Page.currentFace);
+        this.page.setFace('win');
     }
 
     startTimer() {

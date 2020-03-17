@@ -3,8 +3,10 @@ import {difficulties} from "./difficulty.js";
 
 export class Page {
     constructor() {
+        this.mouseDown = false;
         this.html = document.querySelector('html');
         this.buttons = document.querySelectorAll('button');
+        this.resetButton = document.querySelector('#reset');
         this.timerElement = document.querySelector('#timer');
         this.difficulty = difficulties.beginner;
         this.startNewGame();
@@ -16,21 +18,14 @@ export class Page {
     prepPage() {
         this.html.addEventListener('contextmenu', (e) => e.preventDefault());
         this.html.addEventListener('mousedown', (e) => e.preventDefault());
-        this.html.addEventListener('mousedown', () => Page.mouseDown = true);
-        this.html.addEventListener('mouseup', () => Page.mouseDown = false);
+        this.html.addEventListener('mousedown', () => this.mouseDown = true);
+        this.html.addEventListener('mouseup', () => this.mouseDown = false);
     }
 
     prepReset() {
-        Page.resetButton.addEventListener('mousedown', () => Page.resetButton.setAttribute('src', '/images/faces/face_pressed.svg'));
-        Page.resetButton.addEventListener('mouseup', () => Page.resetButton.setAttribute('src', Page.currentFace));
-        Page.resetButton.addEventListener('mouseleave', () => Page.resetButton.setAttribute('src', Page.currentFace));
-
-        Page.resetButton.addEventListener('click', () => {
-            clearInterval(this.game.timer);
-            this.timerElement.textContent = '0';
-            this.startNewGame();
-            Page.currentFace = '/images/faces/face_unpressed.svg';
-            Page.resetButton.setAttribute('src', Page.currentFace);
+        this.resetButton.addEventListener('click', () => {
+            this.setFace('pressed');
+            setTimeout(() => this.resetGameState(), 100);
         });
     }
 
@@ -38,33 +33,50 @@ export class Page {
         document.querySelector('#beginner')
             .addEventListener('click', () => {
                 this.difficulty = difficulties.beginner;
-                clearInterval(this.game.timer);
-                this.timerElement.textContent = '0';
-                this.startNewGame();
+                this.resetGameState();
             });
 
         document.querySelector('#intermediate')
             .addEventListener('click', () => {
                 this.difficulty = difficulties.intermediate;
-                clearInterval(this.game.timer);
-                this.timerElement.textContent = '0';
-                this.startNewGame();
-        });
+                this.resetGameState();
+            });
 
         document.querySelector('#expert')
             .addEventListener('click', () => {
                 this.difficulty = difficulties.expert;
-                clearInterval(this.game.timer);
-                this.timerElement.textContent = '0';
-                this.startNewGame();
+                this.resetGameState();
             });
     }
 
+    setFace(face = 'unpressed') {
+        switch (face) {
+            case 'pressed':
+                this.resetButton.setAttribute('src', '/images/faces/face_pressed.svg');
+                break;
+            case 'win':
+                this.resetButton.setAttribute('src', '/images/faces/face_win.svg');
+                break;
+            case 'lose':
+                this.resetButton.setAttribute('src', '/images/faces/face_lose.svg');
+                break;
+            default:
+                this.resetButton.setAttribute('src', '/images/faces/face_unpressed.svg');
+        }
+    }
+
+    resetTimer() {
+        clearInterval(this.game.timer);
+        this.timerElement.textContent = '0';
+    }
+
     startNewGame() {
-        this.game = new Game(this.difficulty.sizeX, this.difficulty.sizeY, this.difficulty.mines);
+        this.game = new Game(this.difficulty.sizeX, this.difficulty.sizeY, this.difficulty.mines, this);
+    }
+
+    resetGameState() {
+        this.setFace();
+        this.resetTimer();
+        this.startNewGame();
     }
 }
-
-Page.currentFace = '/images/faces/face_unpressed.svg';
-Page.resetButton = document.querySelector('#reset');
-Page.mouseDown = false;
