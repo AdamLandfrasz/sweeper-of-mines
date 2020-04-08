@@ -30,23 +30,31 @@ export class Page {
     }
 
     prepDifficultyButtons() {
-        document.querySelector('#beginner')
-            .addEventListener('click', () => {
-                this.difficulty = difficulties.beginner;
-                this.resetGameState();
-            });
+        this.buttons.forEach(btn => btn.addEventListener('click', () => {
+            this.resetButtons();
+            btn.toggleAttribute('disabled');
+            btn.classList.toggle('selected');
+            this.difficulty = this.getDiff(btn.dataset.difficulty);
+            this.resetGameState();
+        }));
+    }
 
-        document.querySelector('#intermediate')
-            .addEventListener('click', () => {
-                this.difficulty = difficulties.intermediate;
-                this.resetGameState();
-            });
+    resetButtons() {
+        this.buttons.forEach(btn => {
+            if (btn.classList.contains('selected')) btn.classList.toggle('selected');
+            if (btn.disabled) btn.toggleAttribute('disabled');
+        });
+    }
 
-        document.querySelector('#expert')
-            .addEventListener('click', () => {
-                this.difficulty = difficulties.expert;
-                this.resetGameState();
-            });
+    getDiff(diff) {
+        switch (diff) {
+            case 'beginner':
+                return difficulties.beginner;
+            case 'intermediate':
+                return difficulties.intermediate;
+            case 'expert':
+                return difficulties.expert;
+        }
     }
 
     setFace(face = 'unpressed') {

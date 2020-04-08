@@ -2,9 +2,9 @@ extends layout
 
 block content
   div(id='buttons')
-    button(id='beginner')='beginner'
-    button(id='intermediate')='intermediate'
-    button(id='expert')='expert'
+    button(id='beginner' data-difficulty='beginner' class='selected' disabled)='Beginner'
+    button(id='intermediate' data-difficulty='intermediate')='Intermediate'
+    button(id='expert' data-difficulty='expert')='Expert'
   div(id='wrapper')
     div(id='header')
       div(id='flag-counter' class='digital')='0'
